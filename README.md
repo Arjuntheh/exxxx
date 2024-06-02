@@ -104,3 +104,144 @@ A1=4'b0001; B1=4'b0010; cin1=1'b0; #2
 $finish; 
 end 
 endmodule 
+
+4. fifo
+module sync_fifo(input clk,
+            input rst_n,
+            input wr_en_i,
+            input [7:0]data_i,
+            output full_o,
+            
+            input rd_en_i,
+            output reg [7:0] data_o,
+            output empty_o);
+    
+    parameter DEPTH = 8; 
+reg [7:0] mem[0:DEPTH-1];
+
+reg[2:0] wr_ptr;
+reg[2:0] rd_ptr;
+reg[3:0] count;
+
+assign full_o = (count == DEPTH);
+assign empty_o = (count == 0);
+
+////write process///
+always @(posedge clk or negedge rst_n)
+begin
+if(!rst_n)
+begin
+wr_ptr <= 3'd0;
+end else begin
+if(wr_en_i == 1) begin
+mem[wr_ptr] <= data_i;
+wr_ptr <= wr_ptr + 1;
+end
+end
+end
+
+/////read process/////
+always @(posedge clk or negedge rst_n)
+begin
+if(!rst_n)
+begin
+rd_ptr <= 3'd0;
+end else begin
+if(rd_en_i == 1)
+begin
+data_o = mem[rd_ptr];
+rd_ptr <= rd_ptr + 1;
+end
+end
+end
+ 
+
+//////count//////
+always @(posedge clk or negedge rst_n)
+begin
+if(!rst_n) begin
+count <= 4'd0; 
+ end else begin
+case({wr_en_i,rd_en_i})
+	2'b10: count <= count + 1;
+	2'b01: count <= count - 1;
+	2'b11: count <= count;
+	2'b00: count <= count;
+default: count <= count;
+endcase
+end
+end
+endmodule
+
+
+`define clk_period 10
+
+module sync_fifo_tb();
+
+reg clk, rst_n;
+reg wr_en_i, rd_en_i;
+reg [7:0]data_i;
+
+wire [7:0]data_o;
+wire full_o, empty_o;
+integer i;
+sync_fifo SYNC_FIFO(.clk(clk),
+            .rst_n(rst_n),
+            .wr_en_i(wr_en_i),
+            .data_i(data_i),
+            .full_o(full_o),
+            
+            .rd_en_i(rd_en_i),
+            .data_o(data_o),
+            .empty_o(empty_o)
+);
+
+  initial clk = 1'b1;
+always #(`clk_period/2) clk = ~clk;
+
+
+initial begin
+rst_n = 1'b1;
+wr_en_i = 1'b0;
+rd_en_i = 1'b0;
+data_i = 8'b0;
+#(`clk_period);
+rst_n = 1'b0;
+#(`clk_period);
+rst_n = 1'b1;
+
+  // write data//
+wr_en_i = 1'b1;
+rd_en_i = 1'b0;
+ for(i=0;i<8;i=i+1)
+begin
+data_i = i;
+#(`clk_period);
+end
+
+//read//
+wr_en_i = 1'b0;
+rd_en_i = 1'b1;
+ for(i=0;i<8;i=i+1)
+begin
+
+#(`clk_period);
+end
+
+ // write data//
+wr_en_i = 1'b1;
+rd_en_i = 1'b0;
+ for(i=0;i<8;i=i+1)
+begin
+data_i = i;
+#(`clk_period);
+end
+
+#(`clk_period);
+#(`clk_period);
+#(`clk_period);
+
+$finish;
+end
+  endmodule        
+           
