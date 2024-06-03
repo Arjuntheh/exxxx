@@ -254,7 +254,57 @@ end
   endmodule        
 
 
-5.melay
+
+5.ms.v
+module ms(clk,rst,j,k,q,qb);
+input clk,rst,j,k;
+output reg q,qb;
+assign qb=~q;
+reg mq;
+always @(posedge(clk))
+begin 
+if(rst)
+mq<=1'b0;
+else 
+begin 
+case({j,k})
+2'b00:mq<=mq;
+2'b00:mq<=1'b0;
+2'b00:mq<=1'b1;
+2'b00:mq<=~mq;
+endcase 
+end 
+end 
+always @(negedge(clk))
+begin 
+if(rst)
+q<=1'b0;
+else 
+q<=mq;
+end 
+endmodule 
+
+module ms_tb; 
+reg clk,rst,j,k; 
+wire q,qb; 
+ms utt1(clk,rst,j,k,q,qb); 
+initial begin 
+clk = 1'b0; 
+forever #1 clk = ~clk; 
+end 
+initial begin 
+rst = 1'b1; j = 1'b0; k = 1'b0 ; #10 
+rst = 1'b0; j = 1'b0; k = 1'b1 ; #10 
+rst = 1'b0; j = 1'b1; k = 1'b0 ; #10 
+
+$finish; 
+end 
+endmodule 
+
+
+
+
+6.melay
  
 module  state_machine_mealy (clk,  reset,  in,  out);  
 input  clk,  reset,  in;   
