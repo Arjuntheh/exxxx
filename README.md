@@ -68,95 +68,49 @@ endmodule
 
 
 3. csa.v
-module CSA(cout,S,A,B,cin);
-    output [3:0]S;
-    output cout;
-    input [3:0]A,B;
-    input cin;
-    wire c1,c2,c3,c4,P0,P1,P2,P3;
-    full_adder F1(S[0],c1,A[0],B[0],CIN);
-    full_adder F2(S[1],c2,A[1],B[1],c1);
-    full_adder F3(S[2],c3,A[2],B[2],c2);
-    full_adder F4(S[3],Cout,A[3],B[3],c3);
-    and g0(p0,A[0],B[0]);
-    and g1(p1,A[1],B[1]);
-    and g2(p2,A[2],B[2]);
-    and g3(p3,A[3],B[3]);
- mux2x1 m1(cout1,c3,cout,se1);
- endmodule;
-module full_adder(co,S,A,B,ci); 
-input A,B,ci; 
-output S,co; 
-assign S = A^B^ci; 
-assign co = (A&B)|(B&ci)|(ci&A); 
-endmodule
-
-
-module CSA_tb;
-reg [3:0]A1,B1; 
-reg cin1; 
-wire [3:0]S1; 
-wire cout1;
-CSA utt1(cout1,S1,A1,B1,cin1); 
-initial begin 
-A1=4'b0001; B1=4'b0010; cin1=1'b1; #2 
-A1=4'b1111; B1=4'b1111; cin1=1'b1; #2 
-A1=4'b1001; B1=4'b1010; cin1=1'b1; #2 
-A1=4'b0001; B1=4'b0010; cin1=1'b0; #2 
-$finish; 
-end 
-endmodule 
-                                                          				(or)
-
-module csa(a,b,cin,s,cout); 
-input [3:0]a,b; 
-input cin; 
-output [3:0]s; 
-output cout; 
-wire [3:1]c; 
+module csa(a,b,cin,s,cout);
+input [3:0]a,b;
+input cin;
+output [3:0]s;
+output cout;
+wire c1,c2,c3,c4;
 wire [3:0]p;
 wire sel;
-
-
-FAA FA0 (a[0],b[0],cin,s[0],c[1]); 
-FAA FA1 (a[1],b[1],c[1],s[1],c[2]); 
-FAA FA2 (a[2],b[2],c[2],s[2],c[3]); 
-FAA FA3 (a[3],b[3],c[3],s[3],cout); 
+FA fa1(a[0],b[0],cin,s[0],c1);
+FA fa2(a[1],b[1],c1,s[1],c2);
+FA fa3(a[2],b[2],c2,s[2],c3);
+FA fa4(a[3],b[3],c3,s[3],c4);
 
 assign p[0]=a[0]^b[0];
 assign p[1]=a[1]^b[1];
 assign p[2]=a[2]^b[2];
 assign p[3]=a[3]^b[3];
 
-always @(*)
-case(sel)
-1:cout=cin;
-0:cout=c[3];
-endcase 
-endmodule 
+assign sel=p[0]&p[1]&p[2]&p[3];
+assign cout=sel? cin:c4;
 
-module FAA (a,b,cin,s,cout); 
-input a,b,ci; 
-output s,co; 
-wire vdd, gnd; 
-assign s = a^b^ci; 
-assign co = (a&b)|(b&ci)|(ci&a); 
+endmodule
+
+module FA(a,b,cin,s,cout);
+input a,b,cin;
+output s,cout;
+assign s=a^b^cin;
+assign cout = (a&b)|(b&cin)|(cin&a);
 endmodule
 
 module csa_tb;
-reg [3:0]a,b; 
-reg cin; 
-wire [3:0]s; 
-wire cout; 
-csa PA1 (a,b,cin,s,cout); 
-initial begin 
-a=4'b0001; b=4'b0010; cin=1'b1; #2 
-a=4'b1111; b=4'b1111; cin=1'b1; #2 
-a=4'b1001; b=4'b1010; cin=1'b1; #2 
-a=4'b0001; b=4'b0010; cin=1'b0; #2 
-$finish; 
-end 
-endmodule 
+reg [3:0]a,b;
+reg cin;
+wire[3:0]s;
+wire cout;
+csa csa1(.a(a),.b(b),.cin(cin),.s(s),.cout(cout));
+initial begin
+a=4'b0000;b=4'b0101;cin=1'b0;#10
+a=4'b0101;b=4'b1010;cin=1'b1;#10
+a=4'b1111;b=4'b0000;cin=1'b0;#10
+$finish;
+end
+endmodule
 
 
 4. fifo
