@@ -27,6 +27,7 @@ $finish;
 end
 endmodule
 
+
 2. cla.v
 module CarryLookAheadAdder(
 input [3:0]A, B, 
@@ -64,6 +65,7 @@ A = 4'hb; B = 4'h6; Cin = 0; #3;
 A = 5; B = 3; Cin = 1;
 end
 endmodule
+
 
 3. csa.v
 module CSA(cout,S,A,B,cin);
@@ -104,6 +106,58 @@ A1=4'b0001; B1=4'b0010; cin1=1'b0; #2
 $finish; 
 end 
 endmodule 
+                                                          				(or)
+
+module csa(a,b,cin,s,cout); 
+input [3:0]a,b; 
+input cin; 
+output [3:0]s; 
+output cout; 
+wire [3:1]c; 
+wire [3:0]p;
+wire sel;
+
+
+FAA FA0 (a[0],b[0],cin,s[0],c[1]); 
+FAA FA1 (a[1],b[1],c[1],s[1],c[2]); 
+FAA FA2 (a[2],b[2],c[2],s[2],c[3]); 
+FAA FA3 (a[3],b[3],c[3],s[3],cout); 
+
+assign p[0]=a[0]^b[0];
+assign p[1]=a[1]^b[1];
+assign p[2]=a[2]^b[2];
+assign p[3]=a[3]^b[3];
+
+always @(*)
+case(sel)
+1:cout=cin;
+0:cout=c[3];
+endcase 
+endmodule 
+
+module FAA (a,b,cin,s,cout); 
+input a,b,ci; 
+output s,co; 
+wire vdd, gnd; 
+assign s = a^b^ci; 
+assign co = (a&b)|(b&ci)|(ci&a); 
+endmodule
+
+module csa_tb;
+reg [3:0]a,b; 
+reg cin; 
+wire [3:0]s; 
+wire cout; 
+csa PA1 (a,b,cin,s,cout); 
+initial begin 
+a=4'b0001; b=4'b0010; cin=1'b1; #2 
+a=4'b1111; b=4'b1111; cin=1'b1; #2 
+a=4'b1001; b=4'b1010; cin=1'b1; #2 
+a=4'b0001; b=4'b0010; cin=1'b0; #2 
+$finish; 
+end 
+endmodule 
+
 
 4. fifo
 module sync_fifo(input clk,
